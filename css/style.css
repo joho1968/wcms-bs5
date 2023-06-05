@@ -1,0 +1,34 @@
+/**
+ * Custom CSS for the WonderCMS Boostrap 5 theme.
+ *
+ * This is, in particular, useful if you want to modify the main areas of the
+ * theme without modifying the theme itself. Styles are empty as you can see,
+ * but can be modified to suit your needs.
+ */
+
+.wcmsbs5-body {
+}
+
+.wcmsbs5-navbar {
+}
+
+.wcmsbs5-pagetitle {
+}
+
+.wcmsbs5-maincontainer {
+}
+
+.wcmsbs5-maincontent {
+}
+
+.wcmsbs5-subsidecontainer {
+}
+
+.wcmsbs5-subsidecontent {
+}
+
+.wcmsbs5-footercontainer {
+}
+
+.wcmsbs5-footercontent {
+}
