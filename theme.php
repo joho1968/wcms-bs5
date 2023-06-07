@@ -1,7 +1,6 @@
 <?php global $Wcms; ?>
-
 <!DOCTYPE html>
-<html lang="en">
+<html lang="en" data-bs-theme="auto">
     <head>
         <meta charset="UTF-8">
         <meta http-equiv="X-UA-Compatible" content="IE=edge">
@@ -12,7 +11,7 @@
         ?></title>
         <meta name="description" content="<?php echo $Wcms->page('description') ?>">
         <meta name="keywords" content="<?php echo $Wcms->page('keywords') ?>">
-		<meta name="title" content="<?php echo $Wcms->get('config', 'siteTitle') ?> - <?php echo $Wcms->page('title') ?>" />
+        <meta name="title" content="<?php echo $Wcms->get('config', 'siteTitle') ?> - <?php echo $Wcms->page('title') ?>" />
         <meta property="og:url" content="<?php echo $this->url() ?>" />
         <meta property="og:type" content="website" />
         <meta property="og:site_name" content="<?php echo $Wcms->get('config', 'siteTitle') ?>" />
@@ -30,6 +29,30 @@
 
     </head>
 
+    <script>
+        (() => {
+            'use strict'
+
+            // Set theme to the user's preferred color scheme
+            function updateBootstrapTheme() {
+                const colorMode = window.matchMedia("(prefers-color-scheme: dark)").matches ?
+                    "dark" :
+                    "light";
+                document.querySelector("html").setAttribute("data-bs-theme", colorMode);
+            }
+            function documentModeSetup() {
+                // Update theme when the preferred scheme changes
+                window.matchMedia('(prefers-color-scheme: dark)').addEventListener('change', updateBootstrapTheme);
+            }
+
+            if (document.readyState === "complete" || (document.readyState !== "loading" && !document.documentElement.doScroll)) {
+                documentModeSetup();
+            } else {
+                document.addEventListener("DOMContentLoaded", documentModeSetup);
+            }
+        })()
+    </script>
+
     <!-- Disable Bootstrap's "animation" on "collapsing" for the navbar -->
     <style>
         #bs5navBar.collapsing {
@@ -40,6 +63,25 @@
     </style>
 
     <body>
+        <script>
+            <?php
+            /**
+             * It's not always best practice to put a script tag here since it
+             * will block rendering of the page marginally, but this is a very
+             * minor script block that is used to set the correct Bootstrap 5
+             * "color mode" so it matches the visitor browser's setting (i.e.
+             * "Dark mode" or "Light mode") without getting a brief flash
+             * effect every time the page loads
+             **/
+            ?>
+            (() => {
+            'use strict'
+                const colorMode = window.matchMedia("(prefers-color-scheme: dark)").matches ?
+                    "dark" :
+                    "light";
+                document.querySelector("html").setAttribute("data-bs-theme", colorMode);
+            })()
+        </script>
         <div class="container p-1 wcmsbs5-body">
 
         <?php echo $Wcms->alerts() ?>
@@ -131,4 +173,5 @@
         ?>
         </div>
     </body>
+
 </html>

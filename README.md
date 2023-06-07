@@ -19,6 +19,28 @@ The [WCMS-BS5-LOCAL plugin for WonderCMS](https://github.com/joho1968/wcms-bs5-l
 3. Make sure you remove any folder prefix like `-1.0.0` of the unpacked folder
 4. Edit the `data/files/database.js` file and change the theme to `wcms-bs5`
 
+## Dark mode
+
+The theme will, since 1.1.0, automatically detect the visitor browser's "theme
+preference" and toggle Bootstrap 5 to the corresponding setting ("dark" or
+"light"). One could possibly also add a manual toggle, but this involves a nice
+looking icon, and some more code. I would consider adding this if there's a
+request for it.
+
+There's, unfortunately, a small "flash effect" when a page is first loaded if
+the visitor's browser has "Dark mode" enabled. I'm not sure if there's a better
+solution than the one I use in the theme to switch colors, if there is, I'm all
+ears.
+
+I'm not entirely satisfied with Bootstrap 5's choices for the background colors
+used in its "dark mode", but to stay true to Boostrap's CSS classes, I have
+chosen not to modify anything.
+
+## Changelog
+
+### 1.1.0 (2023-06-07)
+* Added support for "Dark mode" (auto detected)
+
 ## License
 
 Please see [LICENSE](LICENSE) for a full copy of GPLv2
