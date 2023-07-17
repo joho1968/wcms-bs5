@@ -40,15 +40,44 @@
                     "light";
                 document.querySelector("html").setAttribute("data-bs-theme", colorMode);
             }
-            function documentModeSetup() {
+            // Submit search form to ourselves
+            function wcmsBS5search() {
+                let e = document.getElementById("searchtext");
+                if (e && ! e.value.length ) {
+                    e.focus();
+                } else {
+                    e = document.getElementById("searchform");
+                    if (e) {
+                        e.submit();
+                    }
+                }
+            }
+            function wcmsBS5setup() {
                 // Update theme when the preferred scheme changes
                 window.matchMedia('(prefers-color-scheme: dark)').addEventListener('change', updateBootstrapTheme);
+                // Setup button click handler for search form
+                let searchButton = document.getElementById("searchbutton");
+                if (searchButton) {
+                    searchButton.addEventListener("click", wcmsBS5search);
+                }
+                // Setup search field handler for ENTER key
+                let e = document.getElementById("searchtext");
+                if (e) {
+                    if (searchButton) {
+                        e.addEventListener("keydown", function(event) {
+                            if (event.keyCode === 13) {
+                                event.preventDefault();
+                                searchButton.click();
+                            }
+                        });
+                    }
+                }
             }
 
             if (document.readyState === "complete" || (document.readyState !== "loading" && !document.documentElement.doScroll)) {
-                documentModeSetup();
+                wcmsBS5setup();
             } else {
-                document.addEventListener("DOMContentLoaded", documentModeSetup);
+                document.addEventListener("DOMContentLoaded", wcmsBS5setup);
             }
         })()
     </script>
@@ -90,68 +119,288 @@
             <?php echo $Wcms->settings() ?>
         </div>
 
-        <nav class="navbar navbar-fixed-top mb-5 w-75 wcmsbs5-navbar" role="navigation">
-            <div class="container d-flex flex-row text-left">
+        <?php
+        /**
+         * Deconstruct possible tokens
+         */
+        if ( ! empty( $_POST['token'] ) ) {
+            $thisToken = $_POST['token'];
+        } else {
+            $thisToken = '';
+        }
+        /**
+         * Deconstruct search parameter, if there is one.
+         */
+        if ( ! empty( $_POST['searchtext'] ) ) {
+            $searchString = trim( urldecode( mb_substr( $_POST['searchtext'], 0, 64 ) ) );
+        } else {
+            $searchString = '';
+        }
+
+        global $SimpleBlog;
+
+        if ( is_object( $SimpleBlog ) ) {
+            echo 'SIMPLEBLOG!!!!';
+        }
+        /**
+         * Make sure we have a valid token if there's a search parameter
+         */
+        if ( ! empty( $searchString ) && ! $Wcms->hashVerify( $thisToken ) ) {
+            // No match, ignore search
+            $searchString = '';
+        }
+        /**
+         * Perform search, after pre-conditioning the pages in question
+         */
+        //$ourItems = array();
+
+            // ----
+            // Walk through menu items, excluding empty/hidden/invisible items
+            function iterateItems( $theItems ) {
+                $items = array();
+
+                foreach( $theItems as $item ) {
+                    if ( empty( $item->visibility ) || $item->visibility != 'show' ) {
+                        return( $items );
+                    }
+                    if ( empty ( $item->slug ) ) {
+                        return( $items );
+                    }
+                    $items[$item->slug] = $item->slug;
+                    $subpages = $item->subpages;
+                    $visibleSubpage = $subpages && in_array( 'show', array_column( (array)$subpages, 'visibility' ) );
+                    if ( $visibleSubpage ) {
+                        $items['subpages'] = iterateItems( $subpages, $items );
+                    }
+                }
+                return( $items );
+            }
+            // ----
+
+        // Find menu items
+        $allItems = $Wcms->db->config->menuItems;
+        $ourItems = iterateItems( $allItems );
+        // Find corresponding pages
+        $allPages = (array)$Wcms->db->pages;
+        $ourPages =  array_intersect_key( $allPages, $ourItems );
+
+        $GLOBALS['searchpages'] = array();
+
+            // ----
+            // Walk through visible pages, process search string and slugs
+            // The use of $GLOBALS[] isn't pretty, duly noted :-)
+
+            function pageWalk( $item, $key, $slug  ) {
+                if ( isset( $item->content ) ) {
+                    // Remove HTML, etc
+                    $content = preg_replace( '/<(|\/)(?!\?).*?(|\/)>/', '', $item->content );
+                } else {
+                    $content = '';
+                }
+                $GLOBALS['searchpages'][] = array(
+                    'slug' => $slug . '/' . $key,
+                    'title' => $item->title,
+                    'content' => $content,
+                );
+                if ( $item->subpages ) {
+                    array_walk_recursive( $item->subpages, 'pageWalk', $slug . '/' . $key );
+                }
+            }
+            // ----
+
+        $matchingContent = array();
+
+        // Flatten or findings
+        if ( array_walk_recursive( $ourPages, 'pageWalk', '' ) ) {
+            /*
+            error_log('Final result-------------------------------------');
+            error_log(print_r($GLOBALS['searchpages'] , true));
+            */
+
+            foreach( $GLOBALS['searchpages'] as $page ) {
+                if ( mb_stristr( $page['title'], $searchString ) !== false ) {
+                    $matchingContent[] = array(
+                        'slug' => $page['slug'],
+                        'title' => $page['title'],
+                        'content' => '',
+                    );
+                } else {
+                    $match = mb_stristr( $page['content'], $searchString );
+                    if ( $match !== false ) {
+                        $matchingContent[] = array(
+                            'slug' => $page['slug'],
+                            'title' => $page['title'],
+                            'content' => '<mark>' . $searchString . '</mark>' .
+                                         mb_substr( $match, mb_strlen( $searchString ), 128 ),
+                        );
+                    }
+                }
+            }// foreach
+        } else {
+            // Something didn't work out
+            error_log( __FILE__ . '(' . __LINE__ . '): Unable to process pages' );
+        }
+
+        /**
+         * See if the SimpleBlog plugin is present, in which case we need to search there too
+         */
+        $simpleBlogData = $Wcms->dataPath . '/simpleblog.json';
+        if ( file_exists( $Wcms->rootDir . '/plugins/simple-blog/simple-blog.php' ) ) {
+            if ( file_exists( $simpleBlogData ) ) {
+                $blogPosts = json_decode( file_get_contents( $simpleBlogData ), true );
+                if ( ! empty( $blogPosts['posts'] ) && is_array( $blogPosts['posts'] ) ) {
+                    foreach( $blogPosts['posts'] as $slug => $post ) {
+                        if ( mb_stristr( $post['title'], $searchString ) !== false ) {
+                            $matchingContent[] = array(
+                                'slug' => '/blog/' . $slug,
+                                'title' => $post['title'],
+                                'content' => '',
+                            );
+                        } else {
+                            // Remove HTML, etc
+                            $content = preg_replace( '/<(|\/)(?!\?).*?(|\/)>/', '', $post['body'] );
+                            $match = mb_stristr( $content, $searchString );
+                            if ( $match !== false ) {
+                                $matchingContent[] = array(
+                                    'slug' => '/blog/' . $slug,
+                                    'title' => $post['title'],
+                                    'content' => '<mark>' . $searchString . '</mark>' .
+                                                 mb_substr( $match, mb_strlen( $searchString ), 128 ),
+                                );
+                            }
+                        }
+                    }// foreach
+                } else {
+                    // Something didn't work out
+                    error_log( __FILE__ . '(' . __LINE__ . '): Unable to process SimpleBlog data in "' . $simpleBlogData . '"' );
+                }
+            }
+        }
+
+        ?>
+
+        <div class="container sticky-top pb-5 bg-white">
+            <nav class="navbar wcmsbs5-navbar justify-content-start align-items-start" role="navigation">
                 <div class="mx-0">
                     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#bs5navBar" aria-controls="bs5navBar" aria-expanded="false" aria-label="Toggle navigation">
                       <small><span class="navbar-toggler-icon"></span></small>
                     </button>
                 </div>
-                <div class="flex-grow-1 text-truncate ms-3">
-                    <a class="navbar-brand" href="<?php echo $Wcms->url(); ?>">
+                <div class="navbar-text text-truncate ms-1 flex-fill w-50 p-1 wcmsbs5-navbar-site-title">
+                    <a class="h5 text-decoration-none wcmsbs5-navbar-site-title-text"
+                       href="<?php echo $Wcms->url(); ?>"
+                       title="<?php echo htmlentities( $Wcms->get( 'config', 'siteTitle' ) ); ?>" >
                         <?php echo htmlentities( $Wcms->get( 'config', 'siteTitle' ) ); ?>
                     </a>
+                </div>
+                <div class="navbar-text text-right ms-1 w-25 p-0 align-middle wcmsbs5-navbar-search">
+                    <form method="post" name="searchform" id="searchform" role="search" action="<?php echo htmlentities( $Wcms->getCurrentPageUrl() ); ?>">
+                        <input type="hidden" name="token" value="<?php echo htmlentities( $Wcms->getToken() ); ?>" />
+                        <div class="input-group">
+                            <input class="form-control p-1" name="searchtext" id="searchtext" type="search" aria-label="Search" style="max-width:210px;" maxlength="200" value="<?php echo htmlentities( $searchString ); ?>" />
+                            <button class="btn btn btn-outline-secondary btn-sm d-none d-lg-inline-block" name="searchbutton" id="searchbutton" type="button">Search</button>
+                        </div>
+                    </form>
                 </div>
                 <div class="collapse navbar-collapse p-2 mt-2 bg-secondary-subtle rounded-bottom border border-3 border-secondary-subtle w-75" id="bs5navBar">
                     <ul class="navbar-nav ms-1 mt-3 text-truncate">
                         <?php echo $Wcms->menu(); ?>
                     </ul>
                 </div>
-            </div>
-        </nav>
+            </nav>
+        </div>
 
         <?php
             /**
-             * Display title of current page, unless we're on a page called
-             * "blog" and the plugin "Simple Blog" is installed. I really don't
-             * like kludges, but "Simple Blog" is a nice plugin, so we'll be
-             * nice. And "Simple Blog" does not like it when we display the
-             * actual page('title') since it seems to use that for other
-             * things.
+             * If we're searching, display result of search
              */
-            $hideTitle = false;
-            $simpleBlogSlug = 'blog';
-            $pathTest = $Wcms->currentPageTree;
-            if ( array_shift( $pathTest ) === $simpleBlogSlug ) {
-                if ( @ file_exists( $Wcms->rootDir . '/plugins/simple-blog/simple-blog.php' ) ) {
-                    $hideTitle = true;
-                }
-            }
-            if ( ! $hideTitle ) {
+            if ( ! empty( $searchString ) ) {
                 ?>
-                <div class="container wcmsbs5-pagetitle">
-                    <h1 class="h2 text-truncate text-body-secondary" title="<?php echo htmlentities( $Wcms->page('title') ); ?>">
-                        <?php
-                            // The page title
-                            // Not sure if I should use $Wcms->currentPage or
-                            // page('title') here, but currentPage seems to be
-                            // a slug ...
-                            echo htmlentities( $Wcms->page('title') );
-                        ?>
-                    </h1>
+                <div class="container wcmsbs5-maincontainer">
+                    <div class="bg-body-tertiary text-body p-5 rounded wcmsbs5-maincontent">
+                <?php
+                    if ( empty( $matchingContent ) ) {
+                        echo '<p class="wcmsbs5-notfound">' .
+                             'No content matches the search criteria' . '&nbsp;&#x1F914;' .
+                             '</p>';
+                    } else {
+                        foreach( $matchingContent as $m ) {
+                            echo '<a class="text-decoration-none" href="' . $Wcms->url( ltrim( $m['slug'], '/' ) ) . '">';
+                            echo '<div class="mt-4 wcmsbs5-match text-wrap">'.
+                                 '<h5 class="wcmsbs5-match-title">&#x27A1;&#xFE0F;&nbsp;'.
+                                 htmlentities( $m['title'] ) .
+                                 '</h5>';
+                            if ( ! empty( $m['content'] ) ) {
+                                echo '<p class="wcmsbs5-match-content text-wrap">'.
+                                     $m['content'] .
+                                     '</p>';
+                            }
+                            echo '</div>';
+                            echo '</a>';
+                        }// foreach
+                    }
+                ?>
+                    </div>
                 </div>
                 <?php
-            }
-        ?>
 
-        <div class="container wcmsbs5-maincontainer">
-            <div class="bg-body-tertiary text-body p-5 rounded wcmsbs5-maincontent">
-                <?php
-                    // The page text
-                    echo $Wcms->page('content');
+            } else {
+                /**
+                 * Display title of current page, unless we're on a page called
+                 * "blog" and the plugin "Simple Blog" is installed. I really don't
+                 * like kludges, but "Simple Blog" is a nice plugin, so we'll be
+                 * nice. And "Simple Blog" does not like it when we display the
+                 * actual page('title') since it seems to use that for other
+                 * things.
+                 */
+                $hideTitle = false;
+                $simpleBlogSlug = 'blog';
+                $pathTest = $Wcms->currentPageTree;
+                if ( array_shift( $pathTest ) === $simpleBlogSlug ) {
+                    if ( file_exists( $Wcms->rootDir . '/plugins/simple-blog/simple-blog.php' ) ) {
+                        $hideTitle = true;
+                    }
+                }
+                if ( ! $hideTitle ) {
+                    ?>
+                    <div class="container wcmsbs5-pagetitle">
+                        <h1 class="h2 text-body-secondary" title="<?php echo htmlentities( $Wcms->page('title') ); ?>">
+                            <?php
+                                // The page title
+                                // Not sure if I should use $Wcms->currentPage or
+                                // page('title') here, but currentPage seems to be
+                                // a slug ...
+                                echo htmlentities( $Wcms->page('title') );
+                            ?>
+                        </h1>
+                    </div>
+                    <?php
+                }
                 ?>
-            </div>
-        </div>
+
+                <div class="container wcmsbs5-maincontainer">
+                    <div class="bg-body-tertiary text-body p-5 rounded wcmsbs5-maincontent">
+                    <?php
+                        /**
+                         * This hack will refrain us from outputting our "better" blog post
+                         * cards if we're currently logged in as the Simple Blog plugin
+                         * makes some assumptions regarding what it can modify and output.
+                         */
+                        if ( $hideTitle && ! $Wcms->loggedIn ) {
+                            echo '<div class="wcmsbs5-blogcards">';
+                        }
+                        // The page text
+                        echo $Wcms->page('content');
+                        // Closing the "hack" (see above)
+                        if ( $hideTitle && ! $Wcms->loggedIn ) {
+                            echo '</div">';
+                        }
+                    ?>
+                    </div>
+                </div>
+<?php
+            }
+?>
 
         <div class="container mt-5 wcmsbs5-subsidecontainer">
             <div class="bg-success-subtle p-5 text-center rounded wcmsbs5-subsidecontent">
@@ -163,7 +412,7 @@
         </div>
 
         <footer class="container-fluid mt-5 wcmsbs5-footercontainer">
-            <div class="bg-body-secondary container p-2 text-end rounded wcmsbs5-footercontent">
+            <div class="bg-body-secondary container p-2 text-center rounded wcmsbs5-footercontent">
                 <?php echo $Wcms->footer() ?>
             </div>
         </footer>

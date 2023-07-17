@@ -32,3 +32,53 @@
 
 .wcmsbs5-footercontent {
 }
+.wcmsbs5-navbar-site-title {
+}
+.wcmsbs5-navbar-site-text {
+}
+.wcmsbs5-navbar-search {
+}
+
+/* Search results */
+.wcmsbs5-notfound {
+    min-height: 200px;
+}
+.wcmsbs5-match {
+}
+.wcmsbs5-match-title {
+}
+.wcmsbs5-match-content {
+}
+
+/* CSS to handle WCMS alert popups */
+#alertWrapperId {
+    z-index: 10000 !important;
+}
+
+/* CSS for the Blog plugin */
+.wcmsbs5-blogcards {
+    display:flex;
+    flex-direction: row;
+    justify-content: space-evenly;
+    flex-wrap: wrap;
+}
+.wcmsbs5-blogcards > .post.card {
+    /*background-color: var(--bs-cyan);*/
+    width: calc(48% - 2rem) !important;
+    display: block !important;
+    text-align: left !important;
+    margin: 0 !important;
+}
+
+/* We'll display just one blog post card here */
+@media (max-width: 768px) {
+
+    .wcmsbs5-blogcards > .post.card {
+        /*background-color: var(--bs-green);*/
+        width: 98% !important;
+    }
+    .wcmsbs5-blogcards > .post.card:not(:first-child) {
+        margin-top: 2rem !important;
+    }
+
+}

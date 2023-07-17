@@ -38,6 +38,17 @@ chosen not to modify anything.
 
 ## Changelog
 
+### 1.2.0 (2023-07-17)
+* Menu and site title is now "sticky", they should not scroll with content
+* Site title has an HTML TITLE element on it, in those situations where content wraps
+* Some additional CSS tweaks are made if the Simple Blog plugin is detected
+* Implemented search, it will match the search criteria against page titles and page content. The search function also supports the Simple Blog plugin
+* It is now assumed that the mb_ string functions are present since WonderCMS also requires them
+
+### 1.1.1 (2023-06-08)
+* Changed footer alignment to centered (instead of right)
+* Removed truncation of page title on overflow, it will now wrap instead
+
 ### 1.1.0 (2023-06-07)
 * Added support for "Dark mode" (auto detected)
 
