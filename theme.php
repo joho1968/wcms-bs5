@@ -303,8 +303,8 @@
                 <div class="navbar-text text-right ms-1 w-25 p-0 align-middle wcmsbs5-navbar-search">
                     <form method="post" name="searchform" id="searchform" role="search" action="<?php echo htmlentities( $Wcms->getCurrentPageUrl() ); ?>">
                         <input type="hidden" name="token" value="<?php echo htmlentities( $Wcms->getToken() ); ?>" />
-                        <div class="input-group">
-                            <input class="form-control p-1" name="searchtext" id="searchtext" type="search" aria-label="Search" style="max-width:210px;" maxlength="200" value="<?php echo htmlentities( $searchString ); ?>" />
+                        <div class="input-group d-flex justify-content-end w-100">
+                            <input class="form-control p-1" name="searchtext" id="searchtext" type="search" aria-label="Search" maxlength="200" value="<?php echo htmlentities( $searchString ); ?>" />
                             <button class="btn btn btn-outline-secondary btn-sm d-none d-lg-inline-block" name="searchbutton" id="searchbutton" type="button">Search</button>
                         </div>
                     </form>
