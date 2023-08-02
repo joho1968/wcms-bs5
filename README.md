@@ -38,6 +38,12 @@ chosen not to modify anything.
 
 ## Changelog
 
+### 1.2.1 (2023-08-02)
+* Minor fixes/cleanup for search functionality
+* Fixes for "navbar" in Dark Mode
+* Changed title from h5 to h4 to better line up with menu button and search field
+* Added support for searching the Simple Blog plugin "description" field
+
 ### 1.2.0 (2023-07-17)
 * Menu and site title is now "sticky", they should not scroll with content
 * Site title has an HTML TITLE element on it, in those situations where content wraps

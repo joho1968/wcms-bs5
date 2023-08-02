@@ -136,12 +136,6 @@
         } else {
             $searchString = '';
         }
-
-        global $SimpleBlog;
-
-        if ( is_object( $SimpleBlog ) ) {
-            echo 'SIMPLEBLOG!!!!';
-        }
         /**
          * Make sure we have a valid token if there's a search parameter
          */
@@ -152,8 +146,6 @@
         /**
          * Perform search, after pre-conditioning the pages in question
          */
-        //$ourItems = array();
-
             // ----
             // Walk through menu items, excluding empty/hidden/invisible items
             function iterateItems( $theItems ) {
@@ -210,76 +202,91 @@
 
         $matchingContent = array();
 
-        // Flatten or findings
-        if ( array_walk_recursive( $ourPages, 'pageWalk', '' ) ) {
-            /*
-            error_log('Final result-------------------------------------');
-            error_log(print_r($GLOBALS['searchpages'] , true));
-            */
+        if ( ! empty( $searchString ) ) {
 
-            foreach( $GLOBALS['searchpages'] as $page ) {
-                if ( mb_stristr( $page['title'], $searchString ) !== false ) {
-                    $matchingContent[] = array(
-                        'slug' => $page['slug'],
-                        'title' => $page['title'],
-                        'content' => '',
-                    );
-                } else {
-                    $match = mb_stristr( $page['content'], $searchString );
-                    if ( $match !== false ) {
+            // Flatten or findings
+            if ( array_walk_recursive( $ourPages, 'pageWalk', '' ) ) {
+                /*
+                error_log('Final result-------------------------------------');
+                error_log(print_r($GLOBALS['searchpages'] , true));
+                */
+
+                foreach( $GLOBALS['searchpages'] as $page ) {
+                    if ( mb_stristr( $page['title'], $searchString ) !== false ) {
                         $matchingContent[] = array(
                             'slug' => $page['slug'],
                             'title' => $page['title'],
-                            'content' => '<mark>' . $searchString . '</mark>' .
-                                         mb_substr( $match, mb_strlen( $searchString ), 128 ),
+                            'content' => '',
                         );
-                    }
-                }
-            }// foreach
-        } else {
-            // Something didn't work out
-            error_log( __FILE__ . '(' . __LINE__ . '): Unable to process pages' );
-        }
-
-        /**
-         * See if the SimpleBlog plugin is present, in which case we need to search there too
-         */
-        $simpleBlogData = $Wcms->dataPath . '/simpleblog.json';
-        if ( file_exists( $Wcms->rootDir . '/plugins/simple-blog/simple-blog.php' ) ) {
-            if ( file_exists( $simpleBlogData ) ) {
-                $blogPosts = json_decode( file_get_contents( $simpleBlogData ), true );
-                if ( ! empty( $blogPosts['posts'] ) && is_array( $blogPosts['posts'] ) ) {
-                    foreach( $blogPosts['posts'] as $slug => $post ) {
-                        if ( mb_stristr( $post['title'], $searchString ) !== false ) {
+                    } else {
+                        $match = mb_stristr( $page['content'], $searchString );
+                        if ( $match !== false ) {
                             $matchingContent[] = array(
-                                'slug' => '/blog/' . $slug,
-                                'title' => $post['title'],
-                                'content' => '',
+                                'slug' => $page['slug'],
+                                'title' => $page['title'],
+                                'content' => '<mark>' . $searchString . '</mark>' .
+                                             mb_substr( $match, mb_strlen( $searchString ), 128 ),
                             );
-                        } else {
-                            // Remove HTML, etc
-                            $content = preg_replace( '/<(|\/)(?!\?).*?(|\/)>/', '', $post['body'] );
-                            $match = mb_stristr( $content, $searchString );
-                            if ( $match !== false ) {
+                        }
+                    }
+                }// foreach
+            } else {
+                // Something didn't work out
+                error_log( __FILE__ . '(' . __LINE__ . '): Unable to process pages' );
+            }
+
+            /**
+             * See if the SimpleBlog plugin is present, in which case we need to search there too
+             */
+            $simpleBlogData = $Wcms->dataPath . '/simpleblog.json';
+            if ( file_exists( $Wcms->rootDir . '/plugins/simple-blog/simple-blog.php' ) ) {
+                if ( file_exists( $simpleBlogData ) ) {
+                    $blogPosts = json_decode( file_get_contents( $simpleBlogData ), true );
+                    if ( ! empty( $blogPosts['posts'] ) && is_array( $blogPosts['posts'] ) ) {
+                        foreach( $blogPosts['posts'] as $slug => $post ) {
+                            if ( mb_stristr( $post['title'], $searchString ) !== false ) {
                                 $matchingContent[] = array(
                                     'slug' => '/blog/' . $slug,
                                     'title' => $post['title'],
-                                    'content' => '<mark>' . $searchString . '</mark>' .
-                                                 mb_substr( $match, mb_strlen( $searchString ), 128 ),
+                                    'content' => '',
                                 );
+                            } else {
+                                // Remove HTML, etc
+                                $content = preg_replace( '/<(|\/)(?!\?).*?(|\/)>/', '', $post['body'] );
+                                $match = mb_stristr( $content, $searchString );
+                                if ( $match !== false ) {
+                                    $matchingContent[] = array(
+                                        'slug' => '/blog/' . $slug,
+                                        'title' => $post['title'],
+                                        'content' => '<mark>' . $searchString . '</mark>' .
+                                                     mb_substr( $match, mb_strlen( $searchString ), 128 ),
+                                    );
+                                } elseif ( ! empty( $post['description'] ) ) {
+                                    // Also check "description" part of post
+                                    $content = preg_replace( '/<(|\/)(?!\?).*?(|\/)>/', '', $post['description'] );
+                                    $match = mb_stristr( $content, $searchString );
+                                    if ( $match !== false ) {
+                                        $matchingContent[] = array(
+                                            'slug' => '/blog/' . $slug,
+                                            'title' => $post['title'],
+                                            'content' => '<mark>' . $searchString . '</mark>' .
+                                                         mb_substr( $match, mb_strlen( $searchString ), 128 ),
+                                        );
+                                    }
+                                }
                             }
-                        }
-                    }// foreach
-                } else {
-                    // Something didn't work out
-                    error_log( __FILE__ . '(' . __LINE__ . '): Unable to process SimpleBlog data in "' . $simpleBlogData . '"' );
+                        }// foreach
+                    } else {
+                        // Something didn't work out
+                        error_log( __FILE__ . '(' . __LINE__ . '): Unable to process SimpleBlog data in "' . $simpleBlogData . '"' );
+                    }
                 }
             }
-        }
+        } // ! empty( $searchString )
 
         ?>
 
-        <div class="container sticky-top pb-5 bg-white">
+        <div class="container sticky-top pb-5">
             <nav class="navbar wcmsbs5-navbar justify-content-start align-items-start" role="navigation">
                 <div class="mx-0">
                     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#bs5navBar" aria-controls="bs5navBar" aria-expanded="false" aria-label="Toggle navigation">
@@ -287,7 +294,7 @@
                     </button>
                 </div>
                 <div class="navbar-text text-truncate ms-1 flex-fill w-50 p-1 wcmsbs5-navbar-site-title">
-                    <a class="h5 text-decoration-none wcmsbs5-navbar-site-title-text"
+                    <a class="h4 text-decoration-none wcmsbs5-navbar-site-title-text"
                        href="<?php echo $Wcms->url(); ?>"
                        title="<?php echo htmlentities( $Wcms->get( 'config', 'siteTitle' ) ); ?>" >
                         <?php echo htmlentities( $Wcms->get( 'config', 'siteTitle' ) ); ?>
