@@ -38,6 +38,11 @@ chosen not to modify anything.
 
 ## Changelog
 
+### 1.2.2 (2023-11-08)
+* Added support for `getSiteLanguage()` introduced in WonderCMS 3.4.3, this is used for the `<html>` tag output.
+* Some `<script>` and `<style>` tags have been moved to the `<body>` section of the page.
+* Better CSS to disable Bootstrap animations/transitions for the navbar
+
 ### 1.2.1 (2023-08-02)
 * Minor fixes/cleanup for search functionality
 * Fixes for "navbar" in Dark Mode

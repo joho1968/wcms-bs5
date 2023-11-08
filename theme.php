@@ -1,6 +1,15 @@
 <?php global $Wcms; ?>
 <!DOCTYPE html>
-<html lang="en" data-bs-theme="auto">
+<?php
+    if ( method_exists( $Wcms, 'getSiteLanguage' ) ) {
+        // WonderCMS 3.4.3+
+        echo '<html lang="' . htmlentities( $Wcms->getSiteLanguage() ) . '" data-bs-theme="auto">';
+    } else {
+        // WonderCMS < 3.4.3
+        echo '<html lang="en" data-bs-theme="auto">';
+    }
+?>
+
     <head>
         <meta charset="UTF-8">
         <meta http-equiv="X-UA-Compatible" content="IE=edge">
@@ -29,69 +38,17 @@
 
     </head>
 
-    <script>
-        (() => {
-            'use strict'
-
-            // Set theme to the user's preferred color scheme
-            function updateBootstrapTheme() {
-                const colorMode = window.matchMedia("(prefers-color-scheme: dark)").matches ?
-                    "dark" :
-                    "light";
-                document.querySelector("html").setAttribute("data-bs-theme", colorMode);
-            }
-            // Submit search form to ourselves
-            function wcmsBS5search() {
-                let e = document.getElementById("searchtext");
-                if (e && ! e.value.length ) {
-                    e.focus();
-                } else {
-                    e = document.getElementById("searchform");
-                    if (e) {
-                        e.submit();
-                    }
-                }
-            }
-            function wcmsBS5setup() {
-                // Update theme when the preferred scheme changes
-                window.matchMedia('(prefers-color-scheme: dark)').addEventListener('change', updateBootstrapTheme);
-                // Setup button click handler for search form
-                let searchButton = document.getElementById("searchbutton");
-                if (searchButton) {
-                    searchButton.addEventListener("click", wcmsBS5search);
-                }
-                // Setup search field handler for ENTER key
-                let e = document.getElementById("searchtext");
-                if (e) {
-                    if (searchButton) {
-                        e.addEventListener("keydown", function(event) {
-                            if (event.keyCode === 13) {
-                                event.preventDefault();
-                                searchButton.click();
-                            }
-                        });
-                    }
-                }
-            }
-
-            if (document.readyState === "complete" || (document.readyState !== "loading" && !document.documentElement.doScroll)) {
-                wcmsBS5setup();
-            } else {
-                document.addEventListener("DOMContentLoaded", wcmsBS5setup);
-            }
-        })()
-    </script>
-
-    <!-- Disable Bootstrap's "animation" on "collapsing" for the navbar -->
-    <style>
-        #bs5navBar.collapsing {
-            transition-property: none !important;
-            transition-duration: 0s !important;
-            transition-delay: 0s !important;
-        }
-    </style>
-
     <body>
+        <!-- Disable Bootstrap's "animation" on "collapsing" for the navbar -->
+        <style>
+            .collapsing {
+                transition-delay: 0s !important;
+                transition-duration: 0s !important;
+                transition: none !important;
+                display: none !important;
+            }
+        </style>
+
         <script>
             <?php
             /**
@@ -210,7 +167,6 @@
                 error_log('Final result-------------------------------------');
                 error_log(print_r($GLOBALS['searchpages'] , true));
                 */
-
                 foreach( $GLOBALS['searchpages'] as $page ) {
                     if ( mb_stristr( $page['title'], $searchString ) !== false ) {
                         $matchingContent[] = array(
@@ -236,7 +192,11 @@
             }
 
             /**
-             * See if the SimpleBlog plugin is present, in which case we need to search there too
+             * See if the SimpleBlog plugin is present, in which case we need to search there too.
+             *
+             * TODO: This could possibly be improved or be done differently if WonderCMS 3.4.3+ is
+             *       installed since it has a installedPlugins() function. I'll leave this as it
+             *       is for now though.
              */
             $simpleBlogData = $Wcms->dataPath . '/simpleblog.json';
             if ( file_exists( $Wcms->rootDir . '/plugins/simple-blog/simple-blog.php' ) ) {
@@ -428,6 +388,62 @@
             echo $Wcms->js();
         ?>
         </div>
+
+
+        <script>
+            (() => {
+                'use strict'
+
+                // Set theme to the user's preferred color scheme
+                function updateBootstrapTheme() {
+                    const colorMode = window.matchMedia("(prefers-color-scheme: dark)").matches ?
+                        "dark" :
+                        "light";
+                    document.querySelector("html").setAttribute("data-bs-theme", colorMode);
+                }
+                // Submit search form to ourselves
+                function wcmsBS5search() {
+                    let e = document.getElementById("searchtext");
+                    if (e && ! e.value.length ) {
+                        e.focus();
+                    } else {
+                        e = document.getElementById("searchform");
+                        if (e) {
+                            e.submit();
+                        }
+                    }
+                }
+                function wcmsBS5setup() {
+                    // Update theme when the preferred scheme changes
+                    window.matchMedia('(prefers-color-scheme: dark)').addEventListener('change', updateBootstrapTheme);
+                    // Setup button click handler for search form
+                    let searchButton = document.getElementById("searchbutton");
+                    if (searchButton) {
+                        searchButton.addEventListener("click", wcmsBS5search);
+                    }
+                    // Setup search field handler for ENTER key
+                    let e = document.getElementById("searchtext");
+                    if (e) {
+                        if (searchButton) {
+                            e.addEventListener("keydown", function(event) {
+                                if (event.keyCode === 13) {
+                                    event.preventDefault();
+                                    searchButton.click();
+                                }
+                            });
+                        }
+                    }
+                }
+
+                if (document.readyState === "complete" || (document.readyState !== "loading" && !document.documentElement.doScroll)) {
+                    wcmsBS5setup();
+                } else {
+                    document.addEventListener("DOMContentLoaded", wcmsBS5setup);
+                }
+            })()
+        </script>
+
+
     </body>
 
 </html>
