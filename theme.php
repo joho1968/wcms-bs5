@@ -1,4 +1,29 @@
-<?php global $Wcms; ?>
+<?php
+/*
+ * theme.php (wcms-bs5)
+ * Copyright 2023-2024 Joaquim Homrighausen; all rights reserved.
+ * Development sponsored by WebbPlatsen i Sverige AB, www.webbplatsen.se
+ *
+ * This file is part of wcms-bs5. wcms-bs5 is free software.
+ *
+ * wcms-bs5 is free software: you may redistribute it and/or modify it
+ * under the terms of the GNU AFFERO GENERAL PUBLIC LICENSE v3 as published by
+ * the Free Software Foundation.
+ *
+ * wcms-bs5 is distributed in the hope that it will be useful, but WITHOUT
+ * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or
+ * FITNESS FOR A PARTICULAR PURPOSE. See the GNU AFFERO GENERAL PUBLIC LICENSE
+ * v3 for more details.
+ *
+ * You should have received a copy of the GNU AFFERO GENERAL PUBLIC LICENSE v3
+ * along with the wcms-bs5 package. If not, write to:
+ *  The Free Software Foundation, Inc.,
+ *  51 Franklin Street, Fifth Floor
+ *  Boston, MA  02110-1301, USA.
+ */
+
+global $Wcms;
+?>
 <!DOCTYPE html>
 <?php
     if ( method_exists( $Wcms, 'getSiteLanguage' ) ) {
@@ -14,7 +39,6 @@
         <meta charset="UTF-8">
         <meta http-equiv="X-UA-Compatible" content="IE=edge">
         <meta name="viewport" content="width=device-width, initial-scale=1">
-
         <title><?php
             echo $Wcms->get('config', 'siteTitle') . ' - ' . $Wcms->page('title');
         ?></title>

@@ -36,7 +36,15 @@ I'm not entirely satisfied with Bootstrap 5's choices for the background colors
 used in its "dark mode", but to stay true to Boostrap's CSS classes, I have
 chosen not to modify anything.
 
+## Other notes
+
+This plugin has only been tested with PHP 8.1.x, but should work with other versions too. If you find an issue with your specific PHP version, please let me know and I will look into it.
+
 ## Changelog
+
+### 1.2.3 (2024-11-25)
+* Added a better `preview.jpg` to better suit layout in official theme repo :blush:
+* License changed to AGPLv3
 
 ### 1.2.2 (2023-11-08)
 * Added support for `getSiteLanguage()` introduced in WonderCMS 3.4.3, this is used for the `<html>` tag output.
@@ -65,24 +73,34 @@ chosen not to modify anything.
 
 ## License
 
-Please see [LICENSE](LICENSE) for a full copy of GPLv2
+Please see [LICENSE](LICENSE) for a full copy of AGPLv3.
 
-Copyright (C) 2023 [Joaquim Homrighausen](https://github.com/joho1968); all rights reserved.
+Copyright 2023-2024 [Joaquim Homrighausen](https://github.com/joho1968); all rights reserved.
 
 This file is part of wcms-bs5. wcms-bs5 is free software.
 
-You may redistribute it and/or modify it under the terms of the GNU General
-Public License version 2, as published by the Free Software Foundation.
+wcms-bs5 is free software: you may redistribute it and/or modify it under
+the terms of the GNU AFFERO GENERAL PUBLIC LICENSE v3 as published by the
+Free Software Foundation.
 
-wcms-bs5 is distributed in the hope that it will be useful, but WITHOUT
-ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
-FOR A PARTICULAR PURPOSE. See the GNU General Public License for more details.
+wcms-bs5 is distributed in the hope that it will be useful, but WITHOUT ANY
+WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS FOR A
+PARTICULAR PURPOSE. See the GNU AFFERO GENERAL PUBLIC LICENSE v3 for more
+details.
 
-You should have received a copy of the GNU General Public License along with
-the wcms-bs5-local package. If not, write to:
-
+You should have received a copy of the GNU AFFERO GENERAL PUBLIC LICENSE v3
+along with the wcms-bs5 package. If not, write to:
 ```
 The Free Software Foundation, Inc.,
 51 Franklin Street, Fifth Floor
 Boston, MA  02110-1301, USA.
 ```
+
+## Credits
+
+The WCMS-BS5 theme for WonderCMS was written by Joaquim Homrighausen while converting :coffee: into code.
+
+If you find this WonderCMS add-on useful, feel free to donate, review it, and or spread the word :blush:
+
+If there is something you feel to be missing from this WonderCMS add-on, or if you have found a problem with the code or a feature, please do not hesitate to reach out.
+
