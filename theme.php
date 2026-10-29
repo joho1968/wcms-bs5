@@ -164,6 +164,7 @@ global $Wcms;
             // The use of $GLOBALS[] isn't pretty, duly noted :-)
 
             function pageWalk( $item, $key, $slug  ) {
+                if ( ! empty( $item->private ) && ! $GLOBALS['Wcms']->loggedIn ) return; // WonderCMS 3.7.0+ private page and its subpages
                 if ( isset( $item->content ) ) {
                     // Remove HTML, etc
                     $content = preg_replace( '/<(|\/)(?!\?).*?(|\/)>/', '', $item->content );
